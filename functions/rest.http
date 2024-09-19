@@ -1,0 +1,10 @@
+GET http://127.0.0.1:5001/vuefire2-cc79f/us-central1/api
+
+###
+POST http://127.0.0.1:5001/vuefire2-cc79f/us-central1/api
+Content-Type: application/json
+
+{
+    "name":"Vamsi",
+    "company" : "Cognine"
+}
