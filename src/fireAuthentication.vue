@@ -1,11 +1,12 @@
 <template>
   <div id="app">
-    <div class="auth-container">
+    <input type="checkbox" v-model="checkedItem" value="Option 1" />
+    <div v-if="checkedItem" class="auth-container">
       <!-- Display buttons for selecting login or signup form -->
-      <div  class="auth-buttons">
+      <div class="auth-buttons">
         <button @click="formType('login')">Login</button>
         <button @click="formType('signup')">Signup</button>
-        <button @click="formType('get')">Get</button>
+        <button @click="formType('get')">Add data</button>
       </div>
 
       <!-- Login Form -->
@@ -64,6 +65,7 @@
                 class="form-input"
               />
             </div>
+
             <div class="form-group">
               <label for="name">Name:</label>
               <input id="name" v-model="name" required class="form-input" />
@@ -110,6 +112,14 @@
         <button @click="logout" class="form-button">Logout</button>
       </div>
     </div>
+    <div v-else>
+      <div class="login-container">
+        <h1>Firebase Auth - Login</h1>
+        <button @click="loginWithGoogle" class="login-btn">
+          Login with Google
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -117,7 +127,7 @@
 import firebase from "firebase/app";
 import "firebase/auth";
 import "firebase/storage";
-import db from "./firebaseinit";
+import { db, database } from "./firebaseinit";
 
 export default {
   data() {
@@ -137,6 +147,7 @@ export default {
       employeeData: {}, // Store employee data after login
       emailNotVerified: false, // Flag to show if email is not verified
       emailSent: false,
+      checkedItem: false,
     };
   },
   methods: {
@@ -144,12 +155,19 @@ export default {
     async formType(type) {
       this.type = type;
       if (type === "get") {
-        const docsSnapshot = await db.collection("employees").get();
-
-        // Loop through each document in the snapshot
-        docsSnapshot.forEach((doc) => {
-          console.log(doc.data()); // Access the document data
-        });
+        database
+          .ref("users/user1")
+          .set({
+            name: "John Doe",
+            age: 30,
+            country: "USA",
+          })
+          .then(() => {
+            console.log("Data inserted successfully");
+          })
+          .catch((error) => {
+            console.error("Error inserting data: ", error);
+          });
       }
     },
     // Handle image upload
@@ -183,69 +201,101 @@ export default {
         console.error("Login error:", error.message);
       }
     },
-    // Signup method
-    async signUp() {
-      this.isRegistering = true;
+    async loginWithGoogle() {
+      const provider = new firebase.auth.GoogleAuthProvider(); // Initialize Google provider
       try {
-        const userCredential = await firebase
-          .auth()
-          .createUserWithEmailAndPassword(
-            this.signupEmail,
-            this.signupPassword
-          );
-        const user = userCredential.user;
-        const actionCodeSettings = {
-          url: "http://localhost:8082/", // Your login page or another route
-          handleCodeInApp: true, // Ensures the email link opens within your app
-        };
+        console.log('1')
+        await firebase.auth().signInWithRedirect(provider); // Trigger the Google redirect
+        
+        const user = firebase.auth().currentUser
+         console.log(user,'checking user')
 
-        await user.sendEmailVerification(actionCodeSettings);
-        this.emailSent = true;
-        await this.uploadEmployeeData(user.uid);
-        this.isRegistering = false;
-        console.log("User signed up");
       } catch (error) {
-        console.error("Signup error:", error.message);
-        this.isRegistering = false;
+        console.error("Error during Google sign-in redirect:", error);
       }
     },
-    // Upload employee data
-    async uploadEmployeeData(uid) {
-      if (!this.image) {
-        return;
-      }
+    async checkRedirectResult() {
       try {
-        const storageRef = firebase.storage().ref();
-        const imageRef = storageRef.child(this.image.name);
-        const snapshot = await imageRef.put(this.image);
-        this.imageUrl = await snapshot.ref.getDownloadURL();
-
-        await db.collection("employees").doc(uid).set({
-          name: this.name,
-          role: this.role,
-          id: this.id,
-          imageUrl: this.imageUrl,
-        });
-
-        this.name = "";
-        this.role = "";
-        this.id = "";
-        this.image = null;
+        console.log('checking')
+        // Handle the result after redirect
+        const result = await firebase.auth().getRedirectResult();
+        console.log(result,'checking')
+         const user = firebase.auth().currentUser
+         console.log(user,'checking user')
+        if (result.user) {
+          const user = result.user; // Get user information from result
+          console.log("User Info after redirect:", user);
+        }
       } catch (error) {
-        console.error("Error uploading image or saving data:", error);
-        alert("Failed to upload image or save data. Please try again.");
+        console.error("Error handling redirect result:", error);
       }
     },
-    // Logout method
-    async logout() {
-      try {
-        await firebase.auth().signOut();
-        this.loginSuccess = false;
-        this.type = "";
-      } catch (error) {
-        console.error("Logout error:", error.message);
-      }
-    },
+  },
+  // Signup method
+  async signUp() {
+    this.isRegistering = true;
+    try {
+      const userCredential = await firebase
+        .auth()
+        .createUserWithEmailAndPassword(this.signupEmail, this.signupPassword);
+      const user = userCredential.user;
+      const actionCodeSettings = {
+        url: "http://localhost:8082/", // Your login page or another route
+        handleCodeInApp: true, // Ensures the email link opens within your app
+      };
+
+      await user.sendEmailVerification(actionCodeSettings);
+      this.emailSent = true;
+      await this.uploadEmployeeData(user.uid);
+      this.isRegistering = false;
+      console.log("User signed up");
+    } catch (error) {
+      console.error("Signup error:", error.message);
+      this.isRegistering = false;
+    }
+  },
+  // Upload employee data
+  async uploadEmployeeData(uid) {
+    if (!this.image) {
+      return;
+    }
+    try {
+      const storageRef = firebase.storage().ref();
+      const imageRef = storageRef.child(this.image.name);
+      const snapshot = await imageRef.put(this.image);
+      this.imageUrl = await snapshot.ref.getDownloadURL();
+
+      await db.collection("employees").doc(uid).set({
+        name: this.name,
+        role: this.role,
+        id: this.id,
+        imageUrl: this.imageUrl,
+      });
+
+      this.name = "";
+      this.role = "";
+      this.id = "";
+      this.image = null;
+    } catch (error) {
+      console.error("Error uploading image or saving data:", error);
+      alert("Failed to upload image or save data. Please try again.");
+    }
+  },
+  // Logout method
+  async logout() {
+    try {
+      await firebase.auth().signOut();
+      this.loginSuccess = false;
+      this.type = "";
+    } catch (error) {
+      console.error("Logout error:", error.message);
+    }
+  },
+
+  mounted() {
+    // Check if the redirect result is available when the component is mounted
+    console.log('cheking')
+    this.checkRedirectResult();
   },
 };
 </script>
@@ -367,5 +417,32 @@ input:focus {
   max-width: 200px;
   height: auto;
   border-radius: 8px;
+}
+.login-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f9f9f9;
+}
+
+h1 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.login-btn {
+  padding: 10px 20px;
+  font-size: 18px;
+  color: white;
+  background-color: #4285f4;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.login-btn:hover {
+  background-color: #357ae8;
 }
 </style>
