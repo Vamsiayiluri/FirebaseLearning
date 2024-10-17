@@ -25,7 +25,7 @@
 <script>
 import firebase from "firebase/app";
 import "firebase/storage";
-import db from "../firebaseinit";
+import { db } from "../firebaseinit";
 
 export default {
   name: "pptPresentation",
