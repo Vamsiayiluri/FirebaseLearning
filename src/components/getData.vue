@@ -10,7 +10,7 @@
   
     <script>
 // import db from "./firebaseinit.js";
-import db from "../firebaseinit";
+import { db } from "../firebaseinit";
 export default {
   name: "App",
   methods: {
