@@ -1,19 +1,22 @@
 <template>
   <div id="app">
     <!-- <PDFViewer /> -->
-    <compound-queries />
+    <!-- <compound-queries /> -->
+    <real-time-database-sample/>
   </div>
 </template>
 
 <script>
-import CompoundQueries from './components/CompoundQueries.vue';
+// import CompoundQueries from './components/CompoundQueries.vue';
+import RealTimeDatabaseSample from './components/realTimeDatabaseSample.vue';
 // import PDFViewer from './components/PDFViewer.vue';
 
 export default {
   name: 'App',
   components: {
     // PDFViewer,
-    CompoundQueries
+    // CompoundQueries,
+    RealTimeDatabaseSample
   }
 };
 </script>
