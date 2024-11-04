@@ -67,7 +67,7 @@ Notification.requestPermission().then((permission) => {
       })
       .then((currentToken) => {
         if (currentToken) {
-          console.log("FCM Token:", currentToken);
+          console.log("FCM Token : ", currentToken);
           // Send the token to the server or use it for sending notifications
         } else {
           console.log("No registration token available.");
