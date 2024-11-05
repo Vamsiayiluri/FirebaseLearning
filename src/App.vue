@@ -1,22 +1,25 @@
 <template>
   <div id="app">
     <!-- <PDFViewer /> -->
-    <!-- <compound-queries /> -->
+    <compound-queries />
     <real-time-database-sample/>
+    <fire-authentication />
   </div>
 </template>
 
 <script>
-// import CompoundQueries from './components/CompoundQueries.vue';
+import CompoundQueries from './components/CompoundQueries.vue';
 import RealTimeDatabaseSample from './components/realTimeDatabaseSample.vue';
+import FireAuthentication from './fireAuthentication.vue';
 // import PDFViewer from './components/PDFViewer.vue';
 
 export default {
   name: 'App',
   components: {
     // PDFViewer,
-    // CompoundQueries,
-    RealTimeDatabaseSample
+    CompoundQueries,
+    RealTimeDatabaseSample,
+    FireAuthentication
   }
 };
 </script>
