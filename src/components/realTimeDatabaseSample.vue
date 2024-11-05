@@ -1,5 +1,7 @@
 <template>
   <div class="form-container">
+    <h1>Realtime Database Sample</h1>
+
     <label>
       <input type="checkbox" v-model="checkedItem" value="Option 1" />
       Query Data
