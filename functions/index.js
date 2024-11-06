@@ -7,7 +7,11 @@
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 const functions = require("firebase-functions");
+const admin = require("firebase-admin");
+const serviceAccount = require("d:/vue_test/testapp3/functions/serviceAccountKey.json");
 
+// Initialize the Firebase Admin SDK
+// admin.initializeApp();
 const { logger } = require("firebase-functions");
 const { onRequest } = require("firebase-functions/v2/https");
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
@@ -18,10 +22,36 @@ const axios = require("axios");
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore } = require("firebase-admin/firestore");
 
-initializeApp();
+initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
 
 // Create and deploy your first functions
 // https://firebase.google.com/docs/functions/get-started
+exports.sendNotification = functions.https.onRequest((req, res) => {
+  const registrationToken =
+    "f2FGOx5R2Xhv5O4b8vG6dA:APA91bGLYdlSmBzgqfSjOGlrvy1TUVsN8B7kxYufVEZH8n9CeQ3DT0m4wJEiq-NBD5hMXiLwFPB4gW442d5XzfnrVvr4QS4O8LGHHAy7qjWgcNpVEgw3OaiHzXrOoiSkmIE1icZ52BSq";
+
+  const message = {
+    notification: {
+      title: "Hello!",
+      body: "This is a notification from Cloud Functions!",
+    },
+    token: registrationToken,
+  };
+
+  admin
+    .messaging()
+    .send(message)
+    .then((response) => {
+      console.log("Successfully sent message:", response);
+      res.status(200).send("Notification sent successfully");
+    })
+    .catch((error) => {
+      console.error("Error sending message:", error);
+      res.status(500).send("Notification failed");
+    });
+});
 
 exports.helloWorld = onRequest((request, response) => {
   logger.info("Hello logs!", { structuredData: true });
@@ -65,7 +95,6 @@ exports.api = functions.https.onRequest(async (req, res) => {
     }
     case "POST": {
       const body = req.body;
-      console.log(req.body);
       res.send(body);
       break;
     }
